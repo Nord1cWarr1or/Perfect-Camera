@@ -78,6 +78,8 @@ public plugin_init()
 public OnConfigsExecuted()
 {
     arrayset(g_flCamDistance, g_CvarValue[DEFAULT_DISTANCE], sizeof g_flCamDistance);
+
+    register_cvar("PerfectCamera_version", PLUGIN_VERSION, FCVAR_SERVER|FCVAR_SPONLY|FCVAR_UNLOGGED);
 }
 
 public client_authorized(id, const szAuthID[])
