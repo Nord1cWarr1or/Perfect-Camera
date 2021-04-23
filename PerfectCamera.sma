@@ -1,3 +1,19 @@
+/*  *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *
+*                                                                               *
+*   Plugin: Perfect Camera                                                      *
+*                                                                               *
+*   Official repository: https://github.com/Nord1cWarr1or/Perfect-Camera        *
+*   Contacts of the author: Telegram: @NordicWarrior                            *
+*                                                                               *
+*   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *       *
+*                                                                               *
+*   Плагин: Идеальная камера                                                    *
+*                                                                               *
+*   Официальный репозиторий: https://github.com/Nord1cWarr1or/Perfect-Camera    *
+*   Связь с автором: Telegram: @NordicWarrior                                   *
+*                                                                               *
+*   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   */
+
 #include <amxmodx>
 #include <fakemeta>
 #include <reapi>
