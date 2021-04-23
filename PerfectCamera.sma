@@ -4,9 +4,17 @@
 #include <nvault_array>
 #include <xs>
 
-new const PLUGIN_VERSION[] = "0.2.4a";
+new const PLUGIN_VERSION[] = "0.2.5";
 
 #define register_cmd_list(%0,%1,%2)            for (new i = 0; i < sizeof(%1); i++) register_%0(%1[i], %2)  // by fl0wer
+
+new const g_szCmds[][] = 
+{
+    "say /cam",
+    "say .сфь",
+    "say_team /cam",
+    "say_team .сфь"
+};
 
 new const CAMERA_CLASSNAME[]    = "trigger_camera";
 
@@ -16,10 +24,10 @@ enum _:XYZ { Float:X, Float:Y, Float:Z };
 
 enum _:PLAYER_ZOOM
 {
-    LARGE_AWP_ZOOM = 10,
-    LARGE_OTHER_ZOOM = 15,
-    SMALL_ZOOM = 40,
-    NO_ZOOM = 90
+    LARGE_AWP_ZOOM      = 10,
+    LARGE_OTHER_ZOOM    = 15,
+    SMALL_ZOOM          = 40,
+    NO_ZOOM             = 90
 };
 
 enum _:CVARS
@@ -52,15 +60,12 @@ public plugin_init()
 
     register_message(get_user_msgid("SetFOV"), "message_SetFOV");
 
-    new cmd[][] = {"say /cam", "say .сфь", "say_team /cam", "say_team .сфь"};
-    register_cmd_list(clcmd, cmd, "cmdToggleCam");
+    register_cmd_list(clcmd, g_szCmds, "cmdToggleCam");
 
     register_clcmd("say /camset", "cmdOpenCamMenu");
 
     CreateCvars();
     AutoExecConfig(true, "PerfectCamera");
-
-    arrayset(g_flCamDistance, g_CvarValue[DEFAULT_DISTANCE], sizeof g_flCamDistance);
 
     g_iVautHandle = nvault_open(VAULT_NAME);
 
@@ -68,6 +73,11 @@ public plugin_init()
     {
         nvault_prune(g_iVautHandle, 0, get_systime() - g_CvarValue[NVAULT_PRUNE_DAYS] * 86400);
     }
+}
+
+public OnConfigsExecuted()
+{
+    arrayset(g_flCamDistance, g_CvarValue[DEFAULT_DISTANCE], sizeof g_flCamDistance);
 }
 
 public client_authorized(id, const szAuthID[])
@@ -166,7 +176,7 @@ public CamMenu_handler(const id, iMenu, iItem)
         case MENU_EXIT:
         {
             menu_destroy(iMenu);
-            return PLUGIN_HANDLED;
+            return;
         }
 
         case 0: g_bIsPlayerNoTransparent[id] = !g_bIsPlayerNoTransparent[id];
@@ -176,7 +186,7 @@ public CamMenu_handler(const id, iMenu, iItem)
     }
 
     menu_destroy(iMenu);
-    return cmdOpenCamMenu(id);
+    cmdOpenCamMenu(id);
 }
 
 public RG_PlayerSpawn_Post(const id)
@@ -209,7 +219,7 @@ CreateCam(const id)
 {
     new iCameraEnt = rg_create_entity(CAMERA_CLASSNAME);
 
-    if(!is_entity(iCameraEnt))
+    if(is_nullent(iCameraEnt))
         return;
 
     static iModelIndex;
@@ -219,9 +229,7 @@ CreateCam(const id)
 
     set_entvar(iCameraEnt, var_modelindex, iModelIndex);
     set_entvar(iCameraEnt, var_owner, id);
-    set_entvar(iCameraEnt, var_solid, SOLID_NOT);
     set_entvar(iCameraEnt, var_movetype, MOVETYPE_NOCLIP);
-    set_entvar(iCameraEnt, var_rendermode, kRenderTransColor);
     
     engset_view(id, iCameraEnt);
 
@@ -304,7 +312,7 @@ public FM_AddToFullPack_Post(es, e, ent, host, hostflags, player, pset)
 
 public message_SetFOV(iMsgID, iMsgDest, id)
 {
-    if(!is_user_connected(id) || !g_bInThirdPerson[id] || g_iCameraEnt[id] == NULLENT)
+    if( !g_bInThirdPerson[id] || !is_user_connected(id) ||g_iCameraEnt[id] == NULLENT)
         return;
 
     static const iMsgArg_FOV = 1;
