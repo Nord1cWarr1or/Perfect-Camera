@@ -248,6 +248,7 @@ CreateCam(const id)
     set_entvar(iCameraEnt, var_modelindex, iModelIndex);
     set_entvar(iCameraEnt, var_owner, id);
     set_entvar(iCameraEnt, var_movetype, MOVETYPE_NOCLIP);
+    set_entvar(iCameraEnt, var_rendermode, kRenderTransColor);
     
     engset_view(id, iCameraEnt);
 
