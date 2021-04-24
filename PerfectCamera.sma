@@ -137,6 +137,7 @@ public client_disconnected(id)
     }
 
     RemoveCam(id, false);
+
     g_bInThirdPerson[id] = g_bIsPlayerNoTransparent[id] = g_bCamAlwaysInThirdPerson[id] = false;
     g_flCamDistance[id] = g_CvarValue[DEFAULT_DISTANCE];
 }
@@ -157,6 +158,10 @@ public cmdToggleCam(const id)
             RemoveCam(id, true);
             client_cmd(id, "stopsound");
         }
+    }
+    else
+    {
+        client_print_color(id, print_team_default, "^4* ^1Вы переключили ^3режим камеры^1.")
     }
 }
 
@@ -331,10 +336,10 @@ public FM_AddToFullPack_Post(es, e, ent, host, hostflags, player, pset)
 
 public message_SetFOV(iMsgID, iMsgDest, id)
 {
-    if( !g_bInThirdPerson[id] || !is_user_connected(id) ||g_iCameraEnt[id] == NULLENT)
-        return;
-
     static const iMsgArg_FOV = 1;
+
+    if(!g_bInThirdPerson[id] || !is_user_connected(id) || g_iCameraEnt[id] == NULLENT)
+        return;
 
     new iPlayerFOV = get_msg_arg_int(iMsgArg_FOV);
 
