@@ -171,7 +171,7 @@ public cmdOpenCamMenu(const id)
 
     menu_additem(iMenu, fmt("Прозрачная модель: \d[%s\d]^n", g_bIsPlayerNoTransparent[id] ? "\rНет" : "\yДа"));
 
-    menu_addtext(iMenu, fmt("\wТекущая дистанция: \d[\y%0.f\d]", g_flCamDistance[id]), 0);
+    menu_addtext(iMenu, fmt("\wТекущая дистанция: \d[\y%0.f\d]", g_flCamDistance[id]), .slot = 0);
     menu_additem(iMenu, "Дальше \d[\y+\d]");
     menu_additem(iMenu, "Ближе \d[\r–\d]^n");
 
