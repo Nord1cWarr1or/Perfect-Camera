@@ -214,7 +214,7 @@ public CamMenu_handler(const id, iMenu, iItem)
 
 public RG_PlayerSpawn_Post(const id)
 {
-    if(!is_user_alive(id))
+    if(!is_user_alive(id) || is_user_connecting(id))
         return;
 
     if(g_bInThirdPerson[id])
