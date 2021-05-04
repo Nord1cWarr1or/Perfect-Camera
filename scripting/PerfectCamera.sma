@@ -55,6 +55,15 @@ enum _:CVARS
     DEFAULT_TRANSPARENCY
 };
 
+enum _:CAMERA_MODES
+{
+    NORMAL_MODE,
+    3RD_PERSON,
+    3RD_PERSON_UPLEFT,
+    3RD_PERSON_UPRIGHT,
+    3RD_PERSON_BACKWARDS
+};
+
 new bool:g_bInThirdPerson[MAX_PLAYERS + 1];
 new bool:g_bIsPlayerNoTransparent[MAX_PLAYERS + 1];
 new bool:g_bCamAlwaysInThirdPerson[MAX_PLAYERS + 1];
