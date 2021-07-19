@@ -58,10 +58,10 @@ enum _:CVARS
 enum _:CAMERA_MODES
 {
     NORMAL_MODE,
-    3RD_PERSON,
-    3RD_PERSON_UPLEFT,
-    3RD_PERSON_UPRIGHT,
-    3RD_PERSON_BACKWARDS
+    // 3RD_PERSON,
+    // 3RD_PERSON_UPLEFT,
+    // 3RD_PERSON_UPRIGHT,
+    // 3RD_PERSON_BACKWARDS
 };
 
 new bool:g_bInThirdPerson[MAX_PLAYERS + 1];
@@ -80,6 +80,7 @@ public plugin_init()
 
     RegisterHookChain(RG_CBasePlayer_Spawn, "RG_PlayerSpawn_Post", true);
     RegisterHookChain(RG_CBasePlayer_Killed, "RG_PlayerKilled_Post", true);
+    RegisterHookChain(RG_CBaseEntity_FireBullets3, "RG_OnCBaseEntity_FireBullets3_Pre", false);
 
     register_forward(FM_AddToFullPack, "FM_AddToFullPack_Post", true);
 
@@ -303,30 +304,59 @@ public OnCamThink(iCameraEnt)
     if(!is_user_alive(id) || !is_entity(iCameraEnt))
         return;
 
-    new Float:flPlayerOrigin[XYZ], Float:flCamOrigin[XYZ], Float:flVecPlayerAngles[XYZ], Float:flVecCamAngles[XYZ];
+    new Float:flVecTmp[XYZ];
+    get_entvar(id, var_origin, flVecTmp);
 
-    get_entvar(id, var_origin, flPlayerOrigin);
-    get_entvar(id, var_view_ofs, flVecPlayerAngles);
+    new Float:flVecScr[XYZ];
+    get_entvar(id, var_view_ofs, flVecScr);
+    xs_vec_add(flVecTmp, flVecScr, flVecScr);
 
-    flPlayerOrigin[Z] += flVecPlayerAngles[Z];
+    new Float:flVecViewAngle[XYZ];
+    get_entvar(id, var_v_angle, flVecViewAngle);
 
-    get_entvar(id, var_v_angle, flVecPlayerAngles);
+    new Float:flVecAiming[XYZ];
+    get_entvar(id, var_punchangle, flVecTmp);
+    xs_vec_add(flVecViewAngle, flVecTmp, flVecAiming);
+    
+    angle_vector(flVecAiming, ANGLEVECTOR_FORWARD, flVecAiming);
+    // xs_vec_sub_scaled(flVecScr, flVecAiming, g_flCamDistance[id], flVecAiming);
 
-    angle_vector(flVecPlayerAngles, ANGLEVECTOR_FORWARD, flVecCamAngles);
+    new Float:flVecUp[XYZ], Float:flVecRight[XYZ];
+    angle_vector(flVecAiming, ANGLEVECTOR_UP, flVecUp);
+    angle_vector(flVecAiming, ANGLEVECTOR_RIGHT, flVecRight);
 
-    xs_vec_sub_scaled(flPlayerOrigin, flVecCamAngles, g_flCamDistance[id], flCamOrigin);
+    const scale = 25;
 
-    engfunc(EngFunc_TraceLine, flPlayerOrigin, flCamOrigin, IGNORE_MONSTERS, id, 0);
+    flVecAiming[X] = flVecScr[X] - ((flVecAiming[X] * g_flCamDistance[id]) - ((flVecRight[X] * scale) + (flVecUp[X] * scale)));
+    flVecAiming[Y] = flVecScr[Y] - ((flVecAiming[Y] * g_flCamDistance[id]) - ((flVecRight[Y] * scale) + (flVecUp[Y] * scale)));
+    flVecAiming[Z] = flVecScr[Z] - ((flVecAiming[Z] * g_flCamDistance[id]) - ((flVecRight[Z] * scale) + (flVecUp[Z] * scale)));
 
-    new Float:flFraction;
-    get_tr2(0, TR_flFraction, flFraction);
+    engfunc(EngFunc_TraceLine, flVecScr, flVecAiming, IGNORE_MONSTERS, iCameraEnt, 0);
+    get_tr2(0, TR_vecEndPos, flVecTmp);
 
-    xs_vec_sub_scaled(flPlayerOrigin, flVecCamAngles, flFraction * g_flCamDistance[id], flCamOrigin);
-
-    set_entvar(iCameraEnt, var_origin, flCamOrigin);
-    set_entvar(iCameraEnt, var_angles, flVecPlayerAngles);
+    set_entvar(iCameraEnt, var_origin, flVecTmp);
+    set_entvar(iCameraEnt, var_angles, flVecViewAngle);
 
     set_entvar(iCameraEnt, var_nextthink, get_gametime() + 0.01);
+}
+
+public RG_OnCBaseEntity_FireBullets3_Pre(pEntity, Float:vecSrc[3], Float:vecDirShooting[3], Float:vecSpread, Float:flDistance, iPenetration, iBulletType, iDamage, Float:flRangeModifier, pevAttacker, bool:bPistol, shared_rand)
+{
+    server_print("RG_CBaseEntity_FireBullets3_pre: pEntity %i, Float:vecSrc[3] {%f, %f, %f}, Float:vecDirShooting[3] {%f, %f, %f}, Float:vecSpread %f, ",
+		pEntity, vecSrc[0], vecSrc[1], vecSrc[2], vecDirShooting[0], vecDirShooting[1], vecDirShooting[2], vecSpread);
+
+    new test[3];
+    get_user_origin(pEntity, test, Origin_AimEndEyes );
+
+    new Float:flTest[3];
+    xs_vec_add(vecSrc, vecDirShooting, flTest)
+
+    server_print("Origin_AimEndEyes : %i %i %i", test[0], test[1], test[2])
+    server_print("vecDirShooting: %f %f %f", flTest[0], flTest[1], flTest[2])
+
+	// server_print("Float:flDistance %f, iPenetration %i, iBulletType %i, iDamage %i, Float:flRangeModifier %f, pevAttacker %i, bool:bPistol %i, shared_rand %i",
+		// flDistance, iPenetration, iBulletType, iDamage, flRangeModifier, pevAttacker, bPistol, shared_rand);
+    
 }
 
 public FM_AddToFullPack_Post(es, e, ent, host, hostflags, player, pset)
