@@ -19,6 +19,8 @@
 #include <reapi>
 #include <nvault_array>
 #include <xs>
+#include <msgstocks>
+#include <chr_engine>
 
 new const PLUGIN_VERSION[] = "0.2.5";
 
@@ -80,7 +82,7 @@ public plugin_init()
 
     RegisterHookChain(RG_CBasePlayer_Spawn, "RG_PlayerSpawn_Post", true);
     RegisterHookChain(RG_CBasePlayer_Killed, "RG_PlayerKilled_Post", true);
-    RegisterHookChain(RG_CBaseEntity_FireBullets3, "RG_OnCBaseEntity_FireBullets3_Pre", false);
+    // RegisterHookChain(RG_CBaseEntity_FireBullets3, "RG_OnCBaseEntity_FireBullets3_Pre", false);
 
     register_forward(FM_AddToFullPack, "FM_AddToFullPack_Post", true);
 
@@ -99,6 +101,12 @@ public plugin_init()
     {
         nvault_prune(g_iVautHandle, 0, get_systime() - g_CvarValue[NVAULT_PRUNE_DAYS] * 86400);
     }
+}
+new g_iSpriteIndex;
+
+public plugin_precache()
+{
+    g_iSpriteIndex = precache_model("sprites/laserbeam.spr");
 }
 
 public OnConfigsExecuted()
@@ -282,6 +290,7 @@ RemoveCam(id, bool:bAttachViewToPlayer)
 
     new iCameraEnt = MaxClients;
 
+    // rg_find_ent_by_owner - ?
     while((iCameraEnt = rg_find_ent_by_class(iCameraEnt, CAMERA_CLASSNAME)))
     {
         if(!is_entity(iCameraEnt))
@@ -297,7 +306,7 @@ RemoveCam(id, bool:bAttachViewToPlayer)
     }
 }
 
-public OnCamThink(iCameraEnt)
+/*public OnCamThink(iCameraEnt)
 {
     new id = get_entvar(iCameraEnt, var_owner);
 
@@ -337,13 +346,120 @@ public OnCamThink(iCameraEnt)
     set_entvar(iCameraEnt, var_origin, flVecTmp);
     set_entvar(iCameraEnt, var_angles, flVecViewAngle);
 
+    new Float:flVecTmp2[3]
+    angle_vector(flVecViewAngle, ANGLEVECTOR_FORWARD, flVecTmp2);
+
+    xs_vec_add_scaled(flVecTmp, flVecTmp2, 9999.0, flVecTmp2);
+    engfunc(EngFunc_TraceLine, flVecTmp, flVecTmp2, IGNORE_MONSTERS, iCameraEnt, 0);
+    get_tr2(0, TR_vecEndPos, flVecTmp2);
+
+    if(id == 1)
+    {
+        te_create_beam_between_points_f(
+            .startpos = flVecTmp,
+            .endpos = flVecTmp2,
+            .sprite = g_iSpriteIndex,
+            .framerate = 0,
+            .life = 1,
+            .width = 12,
+            .noise = 0,
+            .r = 100,
+            .g = 250,
+            .b = 100,
+            .a = 255
+        );
+    }
+
+
     set_entvar(iCameraEnt, var_nextthink, get_gametime() + 0.01);
+}*/
+
+public OnCamThink(iCameraEnt)
+{
+    new id = get_entvar(iCameraEnt, var_owner);
+
+    if(!is_user_alive(id) || !is_entity(iCameraEnt))
+        return;
+
+    new Float:vecV_Angle[3], Float:vecPunchAngle[3];
+    get_entvar(id, var_v_angle, vecV_Angle);
+    get_entvar(id, var_punchangle, vecPunchAngle);
+
+    new Float:vecTmp[3];
+    xs_vec_add(vecV_Angle, vecPunchAngle, vecTmp);
+
+    engfunc(EngFunc_MakeVectors, vecTmp);
+
+    new Float:vecOrigin[3], Float:vecView_Ofs[3];
+    get_entvar(id, var_origin, vecOrigin);
+    get_entvar(id, var_view_ofs, vecView_Ofs);
+
+    new Float:vecEyesPosition[3];
+    xs_vec_add(vecOrigin, vecView_Ofs, vecEyesPosition);
+
+    new Float:vecAiming[3];
+    global_get(glb_v_forward, vecAiming);
+
+    new Float:vecUp[3], Float:vecRight[3];
+    global_get(glb_v_up, vecUp);
+    global_get(glb_v_right, vecRight);
+
+    new Float:vecEnd[3];
+    // xs_vec_add_scaled(vecEyesPosition, vecAiming, 128.0, vecEnd);
+    vecEnd[0] = vecEyesPosition[0] - ((vecAiming[0] * 32) - ((vecUp[0] * 15) + (vecRight[0] * 15)));
+    vecEnd[1] = vecEyesPosition[1] - ((vecAiming[1] * 32) - ((vecUp[1] * 15) + (vecRight[1] * 15)));
+    vecEnd[2] = vecEyesPosition[2] - ((vecAiming[2] * 32) - ((vecUp[2] * 15) + (vecRight[2] * 15)));
+
+    engfunc(EngFunc_TraceLine, vecEyesPosition, vecEnd, IGNORE_MONSTERS, id, 0);
+
+    new Float:vecFinalPosition[3];
+    get_tr2(0, TR_vecEndPos, vecFinalPosition);
+
+    // new Float:vecCUMangles[3];
+    // xs_vec_sub(vecOrigin, vecFinalPosition, vecCUMangles);
+
+    // vector_to_angle(vecCUMangles, vecCUMangles);
+
+    // vecV_Angle[0] *= -1.0;
+    // vecV_Angle[1] *= -1.0;
+    // vecV_Angle[2] *= -1.0;
+    new vecAimEndEyes[3], Float:flvecAimEndEyes[3];
+    // get_user_origin(id, vecAimEndEyes, Origin_AimEndEyes);
+    xs_vec_add_scaled(vecEyesPosition, vecAiming, 9999.0, flvecAimEndEyes);
+
+    engfunc(EngFunc_TraceLine, vecEyesPosition, flvecAimEndEyes, IGNORE_MONSTERS, id, 0);
+
+    new Float:vecAimOrigin[3];
+    get_tr2(0, TR_vecEndPos, vecAimOrigin);
+
+    // IVecFVec(vecAimEndEyes, flvecAimEndEyes);
+
+    set_entvar(iCameraEnt, var_origin, vecFinalPosition);
+    // set_entvar(iCameraEnt, var_angles, vecV_Angle);
+    // entity_set_aim(iCameraEnt, vecOrigin);
+    // entity_set_aim(iCameraEnt, vecAimOrigin);
+    aim_at_origin(iCameraEnt, vecAimOrigin, vecV_Angle)
+
+    set_entvar(iCameraEnt, var_nextthink, get_gametime() + 0.01);
+}
+#define Radian2Degree(%1) (%1 * 180.0 / M_PI)
+#define Distance2D(%1,%2) floatsqroot((%1*%1) + (%2*%2))
+stock aim_at_origin(id,const Float:origin[3],Float:angles[3]) {            //stock base by Lord of Destruction
+    static Float:DeltaOrigin[3], Float:orig[3]
+    pev(id,pev_origin, orig)
+    DeltaOrigin[0] = orig[0] - origin[0]
+    DeltaOrigin[1] = orig[1] - origin[1]
+    DeltaOrigin[2] = orig[2] - origin[2]/* + 16.0*/    //bot keeps aiming too high
+
+    angles[0] = Radian2Degree(floatatan(DeltaOrigin[2] / Distance2D(DeltaOrigin[0], DeltaOrigin[1]),0))
+    angles[1] = Radian2Degree(floatatan(DeltaOrigin[1] / DeltaOrigin[0],0))
+    if(DeltaOrigin[0] >= 0.0) angles[1] += 180.0
 }
 
 public RG_OnCBaseEntity_FireBullets3_Pre(pEntity, Float:vecSrc[3], Float:vecDirShooting[3], Float:vecSpread, Float:flDistance, iPenetration, iBulletType, iDamage, Float:flRangeModifier, pevAttacker, bool:bPistol, shared_rand)
 {
-    server_print("RG_CBaseEntity_FireBullets3_pre: pEntity %i, Float:vecSrc[3] {%f, %f, %f}, Float:vecDirShooting[3] {%f, %f, %f}, Float:vecSpread %f, ",
-		pEntity, vecSrc[0], vecSrc[1], vecSrc[2], vecDirShooting[0], vecDirShooting[1], vecDirShooting[2], vecSpread);
+    // server_print("RG_CBaseEntity_FireBullets3_pre: pEntity %i, Float:vecSrc[3] {%f, %f, %f}, Float:vecDirShooting[3] {%f, %f, %f}, Float:vecSpread %f, ",
+		// pEntity, vecSrc[0], vecSrc[1], vecSrc[2], vecDirShooting[0], vecDirShooting[1], vecDirShooting[2], vecSpread);
 
     new test[3];
     get_user_origin(pEntity, test, Origin_AimEndEyes );
@@ -351,8 +467,8 @@ public RG_OnCBaseEntity_FireBullets3_Pre(pEntity, Float:vecSrc[3], Float:vecDirS
     new Float:flTest[3];
     xs_vec_add(vecSrc, vecDirShooting, flTest)
 
-    server_print("Origin_AimEndEyes : %i %i %i", test[0], test[1], test[2])
-    server_print("vecDirShooting: %f %f %f", flTest[0], flTest[1], flTest[2])
+    // server_print("Origin_AimEndEyes : %i %i %i", test[0], test[1], test[2])
+    // server_print("vecDirShooting: %f %f %f", flTest[0], flTest[1], flTest[2])
 
 	// server_print("Float:flDistance %f, iPenetration %i, iBulletType %i, iDamage %i, Float:flRangeModifier %f, pevAttacker %i, bool:bPistol %i, shared_rand %i",
 		// flDistance, iPenetration, iBulletType, iDamage, flRangeModifier, pevAttacker, bPistol, shared_rand);
