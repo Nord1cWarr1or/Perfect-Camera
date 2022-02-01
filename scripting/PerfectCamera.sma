@@ -22,13 +22,14 @@
 
 new const PLUGIN_VERSION[] = "0.2.5";
 
-#define register_cmd_list(%0,%1,%2)            for (new i = 0; i < sizeof(%1); i++) register_%0(%1[i], %2)  // by fl0wer
+// https://dev-cs.ru/threads/222/post-76443
+#define register_cmd_list(%0,%1,%2) for (new i = 0; i < sizeof(%1); i++) register_%0(%1[i], %2)
 
 new const g_szCmds[][] = 
 {
     "say /cam",
-    "say .сфь",
     "say_team /cam",
+    "say .сфь",
     "say_team .сфь"
 };
 
