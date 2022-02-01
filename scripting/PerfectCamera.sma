@@ -39,14 +39,6 @@ new const VAULT_NAME[]          = "perfect_camera";
 
 enum _:XYZ { Float:X, Float:Y, Float:Z };
 
-enum _:PLAYER_ZOOM
-{
-    LARGE_AWP_ZOOM      = 10,
-    LARGE_OTHER_ZOOM    = 15,
-    SMALL_ZOOM          = 40,
-    NO_ZOOM             = 90
-};
-
 enum _:CVARS
 {
     Float:DEFAULT_DISTANCE,
@@ -346,8 +338,8 @@ public message_SetFOV(iMsgID, iMsgDest, id)
 
     switch(iPlayerFOV)
     {
-        case LARGE_AWP_ZOOM, LARGE_OTHER_ZOOM, SMALL_ZOOM: engset_view(id, id);
-        case NO_ZOOM: engset_view(id, g_iCameraEnt[id]);
+        case DEFAULT_LARGE_AWP_ZOOM, DEFAULT_LARGE_OTHER_SNIPERS_ZOOM, DEFAULT_SMALL_SNIPERS_ZOOM: engset_view(id, id);
+        case DEFAULT_NO_ZOOM: engset_view(id, g_iCameraEnt[id]);
     }
 }
 
