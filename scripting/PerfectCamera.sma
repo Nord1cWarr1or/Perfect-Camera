@@ -25,6 +25,11 @@ new const PLUGIN_VERSION[] = "0.2.5";
 // https://dev-cs.ru/threads/222/post-76443
 #define register_cmd_list(%0,%1,%2) for (new i = 0; i < sizeof(%1); i++) register_%0(%1[i], %2)
 
+#define CheckBit(%0,%1) (%0 & (1 << %1))
+#define SetBit(%0,%1) (%0 |= (1 << %1))
+#define ClearBit(%0,%1) (%0 &= ~(1 << %1))
+#define ToggleBit(%0,%1) (%0 ^= (1 << %1))
+
 new const g_szCmds[][] = 
 {
     "say /cam",
@@ -48,10 +53,11 @@ enum _:CVARS
     DEFAULT_TRANSPARENCY
 };
 
-new bool:g_bInThirdPerson[MAX_PLAYERS + 1];
 new bool:g_bIsPlayerNoTransparent[MAX_PLAYERS + 1];
 new bool:g_bCamAlwaysInThirdPerson[MAX_PLAYERS + 1];
 new Float:g_flCamDistance[MAX_PLAYERS + 1];
+
+new g_bitInThirdPerson;
 
 new g_CvarValue[CVARS];
 new g_iVautHandle = INVALID_HANDLE;
@@ -64,8 +70,6 @@ public plugin_init()
 
     RegisterHookChain(RG_CBasePlayer_Spawn, "RG_PlayerSpawn_Post", true);
     RegisterHookChain(RG_CBasePlayer_Killed, "RG_PlayerKilled_Post", true);
-
-    register_forward(FM_AddToFullPack, "FM_AddToFullPack_Post", true);
 
     register_message(get_user_msgid("SetFOV"), "message_SetFOV");
 
@@ -109,7 +113,8 @@ public client_authorized(id, const szAuthID[])
 
     if(g_bCamAlwaysInThirdPerson[id])
     {
-        g_bInThirdPerson[id] = true;
+        SetBit(g_bitInThirdPerson, id);
+        Toggle_AddToFullPack();
     }
 }
 
@@ -131,17 +136,21 @@ public client_disconnected(id)
 
     RemoveCam(id, false);
 
-    g_bInThirdPerson[id] = g_bIsPlayerNoTransparent[id] = g_bCamAlwaysInThirdPerson[id] = false;
+    g_bIsPlayerNoTransparent[id] = g_bCamAlwaysInThirdPerson[id] = false;
     g_flCamDistance[id] = g_CvarValue[DEFAULT_DISTANCE];
+
+    ClearBit(g_bitInThirdPerson, id);
+    Toggle_AddToFullPack();
 }
 
 public cmdToggleCam(const id)
 {
-    g_bInThirdPerson[id] = !g_bInThirdPerson[id];
+    ToggleBit(g_bitInThirdPerson, id);
+    Toggle_AddToFullPack();
 
     if(is_user_alive(id))
     {
-        if(g_bInThirdPerson[id])
+        if(CheckBit(g_bitInThirdPerson, id))
         {
             CreateCam(id);
             client_cmd(id, "stopsound");
@@ -210,7 +219,7 @@ public RG_PlayerSpawn_Post(const id)
     if(!is_user_alive(id) || is_user_connecting(id))
         return;
 
-    if(g_bInThirdPerson[id])
+    if(CheckBit(g_bitInThirdPerson, id))
     {
         CreateCam(id);
     }
@@ -225,7 +234,7 @@ public RG_PlayerKilled_Post(const id)
     if(!is_user_connected(id))
         return;
 
-    if(g_bInThirdPerson[id])
+    if(CheckBit(g_bitInThirdPerson, id))
     {
         RemoveCam(id, true);
     } 
@@ -315,12 +324,12 @@ public OnCamThink(iCameraEnt)
 
 public FM_AddToFullPack_Post(es, e, ent, host, hostflags, player, pset)
 {
-    if(ent == host && g_bInThirdPerson[ent] && !g_bIsPlayerNoTransparent[ent])
+    if(ent == host && CheckBit(g_bitInThirdPerson, ent) && !g_bIsPlayerNoTransparent[ent])
     {
         set_es(es, ES_RenderMode, kRenderTransTexture);
         set_es(es, ES_RenderAmt, g_CvarValue[DEFAULT_TRANSPARENCY]);
     }
-    else if(g_bInThirdPerson[host] && get_es(es, ES_AimEnt) == host && !g_bIsPlayerNoTransparent[host])
+    else if(CheckBit(g_bitInThirdPerson, host) && get_es(es, ES_AimEnt) == host && !g_bIsPlayerNoTransparent[host])
     {
         set_es(es, ES_RenderMode, kRenderTransTexture);
         set_es(es, ES_RenderAmt, g_CvarValue[DEFAULT_TRANSPARENCY]);
@@ -331,7 +340,7 @@ public message_SetFOV(iMsgID, iMsgDest, id)
 {
     static const iMsgArg_FOV = 1;
 
-    if(!g_bInThirdPerson[id] || !is_user_connected(id) || g_iCameraEnt[id] == NULLENT)
+    if(!CheckBit(g_bitInThirdPerson, id) || !is_user_connected(id) || g_iCameraEnt[id] == NULLENT)
         return;
 
     new iPlayerFOV = get_msg_arg_int(iMsgArg_FOV);
@@ -340,6 +349,21 @@ public message_SetFOV(iMsgID, iMsgDest, id)
     {
         case DEFAULT_LARGE_AWP_ZOOM, DEFAULT_LARGE_OTHER_SNIPERS_ZOOM, DEFAULT_SMALL_SNIPERS_ZOOM: engset_view(id, id);
         case DEFAULT_NO_ZOOM: engset_view(id, g_iCameraEnt[id]);
+    }
+}
+
+Toggle_AddToFullPack()
+{
+    static AddToFullPack;
+
+    if(g_bitInThirdPerson && !AddToFullPack)
+    {
+        AddToFullPack = register_forward(FM_AddToFullPack, "FM_AddToFullPack_Post", true);
+    }
+    else if(!g_bitInThirdPerson && AddToFullPack)
+    {
+        unregister_forward(FM_AddToFullPack, AddToFullPack, true);
+        AddToFullPack = 0;
     }
 }
 
