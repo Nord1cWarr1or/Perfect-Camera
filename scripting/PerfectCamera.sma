@@ -130,6 +130,17 @@ public client_authorized(id, const szAuthID[])
 
 public client_disconnected(id)
 {
+    RemoveCam(id, false);
+
+    g_bIsPlayerNoTransparent[id] = g_bCamAlwaysInThirdPerson[id] = false;
+    g_flCamDistance[id] = g_CvarValue[DEFAULT_DISTANCE];
+
+    ClearBit(g_bitInThirdPerson, id);
+    Toggle_AddToFullPack();
+
+    if(g_iVautHandle == INVALID_HANDLE)
+        return;
+
     new szAuthID[MAX_AUTHID_LENGTH];
     get_user_authid(id, szAuthID, charsmax(szAuthID));
 
@@ -139,18 +150,7 @@ public client_disconnected(id)
     Data[1] = floatround(g_flCamDistance[id]);
     Data[2] = g_bCamAlwaysInThirdPerson[id];
 
-    if(g_iVautHandle != INVALID_HANDLE)
-    {
-        nvault_set_array(g_iVautHandle, szAuthID, Data, charsmax(Data));
-    }
-
-    RemoveCam(id, false);
-
-    g_bIsPlayerNoTransparent[id] = g_bCamAlwaysInThirdPerson[id] = false;
-    g_flCamDistance[id] = g_CvarValue[DEFAULT_DISTANCE];
-
-    ClearBit(g_bitInThirdPerson, id);
-    Toggle_AddToFullPack();
+    nvault_set_array(g_iVautHandle, szAuthID, Data, charsmax(Data));
 }
 
 public cmdToggleCam(const id)
