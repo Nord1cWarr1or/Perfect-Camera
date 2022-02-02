@@ -276,7 +276,7 @@ RemoveCam(id, bool:bAttachViewToPlayer)
 
     while((iCameraEnt = rg_find_ent_by_class(iCameraEnt, CAMERA_CLASSNAME)))
     {
-        if(!is_entity(iCameraEnt))
+        if(is_nullent(iCameraEnt))
             continue;
 
         if(get_entvar(iCameraEnt, var_owner) == id && g_iCameraEnt[id] == iCameraEnt)
@@ -293,7 +293,7 @@ public OnCamThink(iCameraEnt)
 {
     new id = get_entvar(iCameraEnt, var_owner);
 
-    if(!is_user_alive(id) || !is_entity(iCameraEnt))
+    if(!is_user_alive(id) || is_nullent(iCameraEnt))
         return;
 
     new Float:flPlayerOrigin[XYZ], Float:flCamOrigin[XYZ], Float:flVecPlayerAngles[XYZ], Float:flVecCamAngles[XYZ];
