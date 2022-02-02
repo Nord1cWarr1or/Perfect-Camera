@@ -38,9 +38,8 @@ new const g_szCmds[][] =
     "say_team .сфь"
 };
 
-new const CAMERA_CLASSNAME[]    = "trigger_camera";
-
-new const VAULT_NAME[]          = "perfect_camera";
+new const CAMERA_CLASSNAME[]            = "trigger_camera";
+new const CAMERA_CUSTOM_CLASSNAME[]     = "perfect_camera";
 
 enum _:XYZ { Float:X, Float:Y, Float:Z };
 
@@ -80,7 +79,7 @@ public plugin_init()
     CreateCvars();
     AutoExecConfig(true, "PerfectCamera");
 
-    g_iVautHandle = nvault_open(VAULT_NAME);
+    g_iVautHandle = nvault_open(CAMERA_CUSTOM_CLASSNAME);
 
     if(g_iVautHandle != INVALID_HANDLE)
     {
@@ -252,6 +251,7 @@ CreateCam(const id)
     if(!iModelIndex)
         iModelIndex = engfunc(EngFunc_ModelIndex, "models/hgibs.mdl");
 
+    set_entvar(iCameraEnt, var_classname, CAMERA_CUSTOM_CLASSNAME);
     set_entvar(iCameraEnt, var_modelindex, iModelIndex);
     set_entvar(iCameraEnt, var_owner, id);
     set_entvar(iCameraEnt, var_movetype, MOVETYPE_NOCLIP);
