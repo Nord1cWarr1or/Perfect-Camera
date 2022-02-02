@@ -22,6 +22,27 @@
 
 new const PLUGIN_VERSION[] = "0.2.5";
 
+// <-- SETTINGS -->
+
+new const TOGGLE_CAM_CMDS[][] = 
+{
+    "say /cam",
+    "say_team /cam",
+    "say .сфь",
+    "say_team .сфь"
+};
+
+new const CAM_SETTINGS_CMDS[][] =
+{
+    "say /camset",
+    "say_team /camset"
+};
+
+// A model that will be 100% in your server's precache
+new const CAMERA_MODEL[] = "models/hgibs.mdl";
+
+// <-- END OF SETTINGS --> 
+
 // https://dev-cs.ru/threads/222/post-76443
 #define register_cmd_list(%0,%1,%2) for (new i = 0; i < sizeof(%1); i++) register_%0(%1[i], %2)
 
@@ -30,15 +51,6 @@ new const PLUGIN_VERSION[] = "0.2.5";
 #define ClearBit(%0,%1) (%0 &= ~(1 << %1))
 #define ToggleBit(%0,%1) (%0 ^= (1 << %1))
 
-new const g_szCmds[][] = 
-{
-    "say /cam",
-    "say_team /cam",
-    "say .сфь",
-    "say_team .сфь"
-};
-
-new const CAMERA_CLASSNAME[]            = "trigger_camera";
 new const CAMERA_CUSTOM_CLASSNAME[]     = "perfect_camera";
 
 enum _:XYZ { Float:X, Float:Y, Float:Z };
@@ -72,9 +84,8 @@ public plugin_init()
 
     register_message(get_user_msgid("SetFOV"), "message_SetFOV");
 
-    register_cmd_list(clcmd, g_szCmds, "cmdToggleCam");
-
-    register_clcmd("say /camset", "cmdOpenCamMenu");
+    register_cmd_list(clcmd, TOGGLE_CAM_CMDS, "cmdToggleCam", ADMIN_ALL);
+    register_cmd_list(clcmd, CAM_SETTINGS_CMDS, "cmdOpenCamMenu", ADMIN_ALL);
 
     CreateCvars();
     AutoExecConfig(true, "PerfectCamera");
@@ -241,7 +252,7 @@ public RG_PlayerKilled_Post(const id)
 
 CreateCam(const id)
 {
-    new iCameraEnt = rg_create_entity(CAMERA_CLASSNAME);
+    new iCameraEnt = rg_create_entity("trigger_camera");
 
     if(is_nullent(iCameraEnt))
         return;
@@ -249,7 +260,7 @@ CreateCam(const id)
     static iModelIndex;
 
     if(!iModelIndex)
-        iModelIndex = engfunc(EngFunc_ModelIndex, "models/hgibs.mdl");
+        iModelIndex = engfunc(EngFunc_ModelIndex, CAMERA_MODEL);
 
     set_entvar(iCameraEnt, var_classname, CAMERA_CUSTOM_CLASSNAME);
     set_entvar(iCameraEnt, var_modelindex, iModelIndex);
@@ -274,7 +285,7 @@ RemoveCam(id, bool:bAttachViewToPlayer)
 
     new iCameraEnt = MaxClients;
 
-    while((iCameraEnt = rg_find_ent_by_class(iCameraEnt, CAMERA_CLASSNAME)))
+    while((iCameraEnt = rg_find_ent_by_class(iCameraEnt, CAMERA_CUSTOM_CLASSNAME)))
     {
         if(is_nullent(iCameraEnt))
             continue;
