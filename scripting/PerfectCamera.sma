@@ -3,6 +3,7 @@
 *   Plugin: Perfect Camera                                                      *
 *                                                                               *
 *   Official repository: https://github.com/Nord1cWarr1or/Perfect-Camera        *
+*   Official plugin support: https://dev-cs.ru/threads/15444/                   *
 *   Contacts of the author: Telegram: @NordicWarrior                            *
 *                                                                               *
 *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *       *
@@ -10,6 +11,7 @@
 *   Плагин: Идеальная камера                                                    *
 *                                                                               *
 *   Официальный репозиторий: https://github.com/Nord1cWarr1or/Perfect-Camera    *
+*   Официальная поддержка плагина: https://dev-cs.ru/threads/15444/             *
 *   Связь с автором: Telegram: @NordicWarrior                                   *
 *                                                                               *
 *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   */
