@@ -226,16 +226,23 @@ public CamMenu_handler(const id, iMenu, iItem)
 
 public RG_PlayerSpawn_Post(const id)
 {
-    if(!is_user_alive(id) || is_user_connecting(id))
+    if(!is_user_alive(id)/* || is_user_connecting(id)*/)
         return;
 
-    if(CheckBit(g_bitInThirdPerson, id))
+    new bool:bInThirdPerson = bool:CheckBit(g_bitInThirdPerson, id);
+    new bool:bCamExists = bool:!is_nullent(g_iCameraEnt[id]);
+
+    // log_amx("%i, %i", bCamExists, bInThirdPerson);
+
+    if(bInThirdPerson && !bCamExists)
     {
         CreateCam(id);
     }
-    else
+    else if(bInThirdPerson && bCamExists)
     {
-        RemoveCam(id, true);
+        // RemoveCam(id, true);
+        
+        set_entvar(g_iCameraEnt[id], var_nextthink, get_gametime() + 0.01);
     }
 }
 
@@ -246,8 +253,9 @@ public RG_PlayerKilled_Post(const id)
 
     if(CheckBit(g_bitInThirdPerson, id))
     {
-        RemoveCam(id, true);
-    } 
+        // RemoveCam(id, true);
+        set_entvar(g_iCameraEnt[id], var_nextthink, 0.0);
+    }
 }
 
 CreateCam(const id)
@@ -302,6 +310,7 @@ RemoveCam(id, bool:bAttachViewToPlayer)
 
 public OnCamThink(iCameraEnt)
 {
+    log_amx("think")
     new id = get_entvar(iCameraEnt, var_owner);
 
     if(!is_user_alive(id) || is_nullent(iCameraEnt))
