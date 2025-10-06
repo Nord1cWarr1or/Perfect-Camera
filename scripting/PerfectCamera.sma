@@ -107,10 +107,13 @@ public OnConfigsExecuted()
     register_cvar("PerfectCamera_version", PLUGIN_VERSION, FCVAR_SERVER|FCVAR_SPONLY|FCVAR_UNLOGGED);
 }
 
-public client_authorized(id, const szAuthID[])
+public client_putinserver(id)
 {
     if(g_iVautHandle == INVALID_HANDLE)
         return;
+
+    new szAuthID[MAX_AUTHID_LENGTH];
+    get_user_authid(id, szAuthID, charsmax(szAuthID));
 
     new Data[4];
     nvault_get_array(g_iVautHandle, szAuthID, Data, charsmax(Data));
@@ -231,7 +234,7 @@ public RG_PlayerSpawn_Post(const id)
     if(!is_user_alive(id) || is_user_connecting(id))
         return;
 
-    if(CheckBit(g_bitInThirdPerson, id))
+    if(CheckBit(g_bitInThirdPerson, id) && is_nullent(g_iCameraEnt[id]))
     {
         CreateCam(id);
     }
@@ -294,7 +297,7 @@ RemoveCam(id, bool:bAttachViewToPlayer)
 
         if(get_entvar(iCameraEnt, var_owner) == id && g_iCameraEnt[id] == iCameraEnt)
         {
-            set_entvar(iCameraEnt, var_flags, FL_KILLME);
+            rg_remove_entity(iCameraEnt);
 
             g_iCameraEnt[id] = NULLENT;
             break;
