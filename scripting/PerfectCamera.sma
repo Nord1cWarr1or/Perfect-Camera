@@ -22,7 +22,7 @@
 #include <nvault_array>
 #include <xs>
 
-new const PLUGIN_VERSION[] = "0.2.5";
+new const PLUGIN_VERSION[] = "0.2.6";
 
 // <-- SETTINGS -->
 
